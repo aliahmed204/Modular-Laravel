@@ -11,6 +11,14 @@
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
         </testsuite>
+        <testsuite name="Module">
+            <!-- <directory>tests/Module</directory> -->
+            <!-- 
+                <directory>./modules/Order/Tests</directory>
+                <directory>./modules/Product/Tests</directory> 
+            -->
+            <directory>./modules/*/Tests</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>
