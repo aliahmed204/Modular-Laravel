@@ -11,7 +11,8 @@ class RouteServiceProvider extends ServiceProvider
     {
         $this->routes(function () {
            Route::middleware('web')
-               ->group(module_path('Order', '/Routes/web.php'));
+                ->as('order::')
+                ->group(module_path('Order', '/Routes/web.php'));
        });
     }
 }
