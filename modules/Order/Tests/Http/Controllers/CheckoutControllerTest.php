@@ -40,14 +40,22 @@ class CheckoutControllerTest extends OrderTestCase
 
         $res->assertStatus(201);
 
+        /** @var \Modules\Order\Models\Order $order */
         $order = Order::latest()->first();
 
         // Order
         $this->assertTrue($order->user->is($user));
         $this->assertEquals(80000, $order->total_in_cents);
-        $this->assertEquals('paid', $order->status);
-        $this->assertEquals('PayBuddy', $order->payment_gateway);
-        $this->assertEquals(36, strlen($order->payment_id));
+        $this->assertEquals('completed', $order->status);
+
+        /** @var \Modules\Payment\Payment $payment */
+        $payment = $order->load('lastPayment')->lastPayment;
+        // Payment
+        $this->assertTrue($payment->user->is($user));
+        $this->assertEquals('paid', $payment->status);
+        $this->assertEquals('PayBuddy', $payment->payment_gateway);
+        $this->assertEquals(36, strlen($payment->payment_id));
+        $this->assertEquals(80000, $payment->total_in_cents);
 
         // Order Lines
         $this->assertCount(3, $order->lines);

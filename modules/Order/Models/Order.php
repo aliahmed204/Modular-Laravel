@@ -4,6 +4,7 @@ namespace Modules\Order\Models;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Modules\Payment\Payment;
 
 class Order extends Model
 {
@@ -20,5 +21,15 @@ class Order extends Model
     public function lines()
     {
         return $this->hasMany(OrderLine::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function lastPayment()
+    {
+        return $this->hasOne(Payment::class)->latestOfMany();
     }
 }
