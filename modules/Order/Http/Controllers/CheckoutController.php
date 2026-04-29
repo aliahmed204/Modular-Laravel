@@ -2,27 +2,28 @@
 
 namespace Modules\Order\Http\Controllers;
 
+use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 use Modules\Order\Http\Requests\CheckoutRequest;
 use Modules\Order\Models\Order;
 use Modules\Payment\PayBuddy;
+use Modules\Product\CartItem;
+use Modules\Product\CartItemCollection;
 use Modules\Product\Models\Product;
+use Modules\Product\Warehouse\ProductStockManager;
 use RuntimeException;
 
 class CheckoutController
 {
+    public function __construct(
+        public ProductStockManager $productStockManager,
+    ) {}
+
     public function __invoke(CheckoutRequest $request)
     {
-        $products = collect($request->input('products'))->map(function ($product) {
-            return [
-                'product' => Product::find($product['id']),
-                'quantity' => $product['quantity'],
-            ];
-        });
+        $cartItems = CartItemCollection::fromRequest($request->input('products'));
 
-        $orderTotalInCents = $products->reduce(function ($carry, $product) {
-            return $carry + ($product['product']->price_in_cents * $product['quantity']);
-        }, 0);
+        $orderTotalInCents = $cartItems->totalInCents();
 
         $payBuddy = PayBuddy::make();
         try {
@@ -40,14 +41,14 @@ class CheckoutController
                 'user_id' => $request->user()->id
             ]);
 
-            $products->each(function ($orderLine) use ($order) {
+            $cartItems->items()->each(function ($cartItem) use ($order) {
                 $order->lines()->create([
-                    'product_id' => $orderLine['product']->id,
-                    'quantity' => $orderLine['quantity'],
-                    'product_price_in_cents' => $orderLine['product']->price_in_cents,
+                    'product_id' => $cartItem->product->id,
+                    'quantity' => $cartItem->quantity,
+                    'product_price_in_cents' => $cartItem->product->priceInCents,
                 ]);
 
-                $orderLine['product']->decrement('stock', $orderLine['quantity']);
+                $this->productStockManager->reserveStock($cartItem->product->id, $cartItem->quantity);
             });
 
             return response()->json([
