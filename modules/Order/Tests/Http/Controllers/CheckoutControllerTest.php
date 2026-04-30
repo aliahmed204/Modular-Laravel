@@ -39,7 +39,7 @@ class CheckoutControllerTest extends OrderTestCase
             ]);
 
         /** @var \Modules\Order\Models\Order $order */
-        $order = Order::latest()->first();
+        $order = Order::latest('id')->first();
 
         $res->assertJson([
                 'message' => 'Order created successfully.',
@@ -96,7 +96,10 @@ class CheckoutControllerTest extends OrderTestCase
                 ])->toArray(),
             ]);
 
-        $res->assertStatus(422)
-            ->assertJsonValidationErrors(['payment_token']);
+            
+            $res->assertStatus(422)
+                    ->assertJsonValidationErrors(['payment_token']);
+
+            $this->assertEquals(0, Order::query()->count());
     }
 }
