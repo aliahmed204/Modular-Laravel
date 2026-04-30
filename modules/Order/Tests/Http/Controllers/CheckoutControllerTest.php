@@ -6,8 +6,10 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Modules\Order\Models\Order;
+use Modules\Order\Models\OrderLine;
 use Modules\Order\Tests\OrderTestCase;
 use Modules\Payment\PayBuddy;
+use Modules\Payment\Payment;
 use Modules\Product\Database\Factories\ProductFactory;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -22,8 +24,8 @@ class CheckoutControllerTest extends OrderTestCase
         $products = ProductFactory::new()->count(3)->create(
             new Sequence(
                 ['name' => 'Very expensive air fryer', 'price_in_cents' => 10000, 'stock' => 10],
-                ['name' =>  'Macbook Pro M3', 'price_in_cents' => 50000, 'stock' => 10],
-                ['name' =>  'iPhone 15 Pro Max', 'price_in_cents' => 20000, 'stock' => 10],
+                ['name' => 'Macbook Pro M3', 'price_in_cents' => 50000, 'stock' => 10],
+                ['name' => 'iPhone 15 Pro Max', 'price_in_cents' => 20000, 'stock' => 10],
             )
         );
 
@@ -38,13 +40,13 @@ class CheckoutControllerTest extends OrderTestCase
                 ])->toArray(),
             ]);
 
-        /** @var \Modules\Order\Models\Order $order */
+        /** @var Order $order */
         $order = Order::latest('id')->first();
 
         $res->assertJson([
-                'message' => 'Order created successfully.',
-                'order_url' => $order->url(),
-            ])
+            'message' => 'Order created successfully.',
+            'order_url' => $order->url(),
+        ])
             ->assertStatus(201);
 
         // Order
@@ -52,7 +54,7 @@ class CheckoutControllerTest extends OrderTestCase
         $this->assertEquals(80000, $order->total_in_cents);
         $this->assertEquals('completed', $order->status);
 
-        /** @var \Modules\Payment\Payment $payment */
+        /** @var Payment $payment */
         $payment = $order->load('lastPayment')->lastPayment;
         // Payment
         $this->assertTrue($payment->user->is($user));
@@ -65,10 +67,10 @@ class CheckoutControllerTest extends OrderTestCase
         $this->assertCount(3, $order->lines);
 
         foreach ($order->lines as $line) {
-            /** @var \Modules\Order\Models\OrderLine $orderLine */
+            /** @var OrderLine $orderLine */
             $orderLine = $order->lines->where('product_id', $line->product_id)->first();
             $orderLine->loadMissing('product');
-            
+
             $this->assertEquals(1, $orderLine->quantity);
             $this->assertEquals($orderLine->product->price_in_cents, $orderLine->product_price_in_cents);
         }
@@ -96,10 +98,9 @@ class CheckoutControllerTest extends OrderTestCase
                 ])->toArray(),
             ]);
 
-            
-            $res->assertStatus(422)
-                    ->assertJsonValidationErrors(['payment_token']);
+        $res->assertStatus(422)
+            ->assertJsonValidationErrors(['payment_token']);
 
-            $this->assertEquals(0, Order::query()->count());
+        $this->assertEquals(0, Order::query()->count());
     }
 }

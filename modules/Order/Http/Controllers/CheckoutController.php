@@ -37,7 +37,7 @@ class CheckoutController
                 'payment_token' => $e->getMessage(),
             ]);
         } catch (\Exception $e) {
-            dd($e->getMessage());
+
             return response()->json([
                 'message' => 'An unexpected error occurred while processing your order.',
             ], 302);

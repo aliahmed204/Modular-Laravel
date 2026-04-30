@@ -16,7 +16,7 @@ final class PurchaseItems
         private CreatePaymentForOrder $createPaymentForOrder,
         private DatabaseManager $databaseManager,
     ) {}
-    
+
     public function execute(CartItemCollection $cartItems, PayBuddy $paymentProvider, string $paymentToken, int $userId): Order
     {
         $orderTotalInCents = $cartItems->totalInCents();
@@ -26,7 +26,7 @@ final class PurchaseItems
             $order = Order::query()->create([
                 'status' => 'completed',
                 'total_in_cents' => $orderTotalInCents,
-                'user_id' => $userId
+                'user_id' => $userId,
             ]);
 
             // Order Lines & Stock Reservation

@@ -2,7 +2,6 @@
 
 namespace Tests\Module\Order\Uint;
 
-use Modules\Order\Models\Order;
 use PHPUnit\Framework\TestCase;
 
 class OrderTest extends TestCase

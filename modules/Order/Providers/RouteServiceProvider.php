@@ -10,9 +10,9 @@ class RouteServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->routes(function () {
-           Route::middleware('web')
+            Route::middleware('web')
                 ->as('order::')
                 ->group(module_path('Order', '/Routes/web.php'));
-       });
+        });
     }
 }

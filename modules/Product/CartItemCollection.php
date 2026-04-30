@@ -8,7 +8,7 @@ use Modules\Product\Models\Product;
 class CartItemCollection
 {
     /**
-     * @param Collection<CartItem> $items
+     * @param  Collection<CartItem>  $items
      */
     public function __construct(
         protected Collection $items,

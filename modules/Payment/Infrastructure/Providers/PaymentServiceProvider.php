@@ -3,7 +3,6 @@
 namespace Modules\Payment\Infrastructure\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Modules\Order\Providers\RouteServiceProvider;
 
 class PaymentServiceProvider extends ServiceProvider
 {

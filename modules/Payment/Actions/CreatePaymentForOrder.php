@@ -15,7 +15,7 @@ class CreatePaymentForOrder
         int $amountInCents,
         string $paymentToken,
         PayBuddy $payBuddy
-    ){
+    ) {
         // Charge the payment
         try {
             $charge = $payBuddy->charge(
