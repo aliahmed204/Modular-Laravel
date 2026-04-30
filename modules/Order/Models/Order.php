@@ -4,7 +4,9 @@ namespace Modules\Order\Models;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Modules\Order\Exceptions\OrderMissingOrderLinesException;
 use Modules\Payment\Payment;
+use Modules\Product\CartItemCollection;
 
 class Order extends Model
 {
@@ -13,11 +15,9 @@ class Order extends Model
         'total_in_cents' => 'integer',
     ];
 
-    // Methods
-    public function url(): string
-    {
-        return route('order::orders.show', $this);
-    }
+    public const COMPLETED = 'completed';
+
+    public const PENDING = 'pending';
 
     public function user()
     {
@@ -37,5 +37,47 @@ class Order extends Model
     public function lastPayment()
     {
         return $this->hasOne(Payment::class)->latestOfMany();
+    }
+
+    // Methods
+    public function url(): string
+    {
+        return route('order::orders.show', $this);
+    }
+
+    public static function startOrderCreation(int $userId): self
+    {
+        return self::make([
+            'status' => self::PENDING,
+            'user_id' => $userId,
+        ]);
+    }
+
+    public function addLinesFromCollection(CartItemCollection $cartItems): self
+    {
+        $cartItems->items()->each(function ($cartItem) {
+            $this->lines->push(OrderLine::make([
+                'product_id' => $cartItem->product->id,
+                'quantity' => $cartItem->quantity,
+                'product_price_in_cents' => $cartItem->product->priceInCents,
+            ]));
+        });
+
+        $this->total_in_cents = $cartItems->totalInCents();
+
+        return $this;
+    }
+
+    public function fullfillOrder(): self
+    {
+        if ( $this->lines->isEmpty() ) {
+            throw new OrderMissingOrderLinesException();
+        }
+
+        $this->status = self::COMPLETED;
+        $this->save();
+        $this->lines()->saveMany($this->lines);
+
+        return $this;
     }
 }

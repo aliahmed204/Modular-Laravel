@@ -19,31 +19,22 @@ final class PurchaseItems
 
     public function execute(CartItemCollection $cartItems, PayBuddy $paymentProvider, string $paymentToken, int $userId): Order
     {
-        $orderTotalInCents = $cartItems->totalInCents();
-
-        return $this->databaseManager->transaction(function () use ($cartItems, $paymentProvider, $paymentToken, $userId, $orderTotalInCents) {
+        return $this->databaseManager->transaction(function () use ($cartItems, $paymentProvider, $paymentToken, $userId) {
             // Order
-            $order = Order::query()->create([
-                'status' => 'completed',
-                'total_in_cents' => $orderTotalInCents,
-                'user_id' => $userId,
-            ]);
+            $order = Order::startOrderCreation($userId)
+                ->addLinesFromCollection($cartItems)
+                ->fullfillOrder();
 
-            // Order Lines & Stock Reservation
+            // Stock Reservation
             $cartItems->items()->each(function ($cartItem) use ($order) {
-                $order->lines()->create([
-                    'product_id' => $cartItem->product->id,
-                    'quantity' => $cartItem->quantity,
-                    'product_price_in_cents' => $cartItem->product->priceInCents,
-                ]);
-
                 $this->productStockManager->reserveStock($cartItem->product->id, $cartItem->quantity);
             });
 
+            // Payment
             $this->createPaymentForOrder->handle(
                 $order->id,
                 $userId,
-                $orderTotalInCents,
+                $order->total_in_cents,
                 $paymentToken,
                 $paymentProvider
             );
