@@ -38,10 +38,14 @@ class CheckoutControllerTest extends OrderTestCase
                 ])->toArray(),
             ]);
 
-        $res->assertStatus(201);
-
         /** @var \Modules\Order\Models\Order $order */
         $order = Order::latest()->first();
+
+        $res->assertJson([
+                'message' => 'Order created successfully.',
+                'order_url' => $order->url(),
+            ])
+            ->assertStatus(201);
 
         // Order
         $this->assertTrue($order->user->is($user));

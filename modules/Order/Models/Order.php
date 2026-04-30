@@ -13,6 +13,12 @@ class Order extends Model
         'total_in_cents' => 'integer',
     ];
 
+    // Methods
+    public function url(): string
+    {
+        return route('order::orders.show', $this);
+    }
+
     public function user()
     {
         return $this->belongsTo(config('auth.providers.users.model', User::class));

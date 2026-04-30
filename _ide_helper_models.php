@@ -41,6 +41,12 @@ namespace App\Models{
 
 namespace Modules\Order\Models{
 /**
+ * @property-read \Modules\Payment\Payment|null $lastPayment
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Modules\Order\Models\OrderLine> $lines
+ * @property-read int|null $lines_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Modules\Payment\Payment> $payments
+ * @property-read int|null $payments_count
+ * @property-read \App\Models\User|null $user
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Order newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Order newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Order query()
@@ -50,11 +56,24 @@ namespace Modules\Order\Models{
 
 namespace Modules\Order\Models{
 /**
+ * @property-read \Modules\Order\Models\Order|null $order
+ * @property-read \Modules\Product\Models\Product|null $product
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrderLine newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrderLine newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrderLine query()
  */
 	class OrderLine extends \Eloquent {}
+}
+
+namespace Modules\Payment{
+/**
+ * @property-read \Modules\Order\Models\Order|null $order
+ * @property-read \App\Models\User|null $user
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Payment newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Payment newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Payment query()
+ */
+	class Payment extends \Eloquent {}
 }
 
 namespace Modules\Product\Models{
