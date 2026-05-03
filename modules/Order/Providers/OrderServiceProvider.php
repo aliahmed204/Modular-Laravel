@@ -12,5 +12,6 @@ class OrderServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(module_path('Order', 'config.php'), 'order');
 
         $this->app->register(RouteServiceProvider::class);
+        $this->app->register(EventServiceProvider::class);
     }
 }

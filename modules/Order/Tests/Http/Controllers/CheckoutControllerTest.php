@@ -5,6 +5,10 @@ namespace Modules\Order\Http\Controllers;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Mail;
+use Modules\Order\Events\OrderFullfilled;
+use Modules\Order\Mail\OrderReceived;
 use Modules\Order\Models\Order;
 use Modules\Order\Models\OrderLine;
 use Modules\Order\Tests\OrderTestCase;
@@ -20,6 +24,8 @@ class CheckoutControllerTest extends OrderTestCase
     #[Test]
     public function it_successfuly_creates_an_order(): void
     {
+        Mail::fake();
+        // Event::fake();
         $user = UserFactory::new()->createOne();
         $products = ProductFactory::new()->count(3)->create(
             new Sequence(
@@ -48,6 +54,14 @@ class CheckoutControllerTest extends OrderTestCase
             'order_url' => $order->url(),
         ])
             ->assertStatus(201);
+
+        // Mail
+        Mail::assertSent(function (OrderReceived $mail) use ($order) {
+            return $mail->hasTo($order->user->email) &&
+                $mail->localizedOrderTotal === $order->localizedTotal();
+        });
+
+        // Event::assertDispatched(OrderFullfilled::class);
 
         // Order
         $this->assertTrue($order->user->is($user));

@@ -2,7 +2,9 @@
 
 namespace Modules\Order\Actions;
 
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Database\DatabaseManager;
+use Modules\Order\Events\OrderFullfilled;
 use Modules\Order\Models\Order;
 use Modules\Payment\Actions\CreatePaymentForOrder;
 use Modules\Payment\PayBuddy;
@@ -15,20 +17,16 @@ final class PurchaseItems
         private ProductStockManager $productStockManager,
         private CreatePaymentForOrder $createPaymentForOrder,
         private DatabaseManager $databaseManager,
+        private Dispatcher $eventDispatcher,
     ) {}
 
-    public function execute(CartItemCollection $cartItems, PayBuddy $paymentProvider, string $paymentToken, int $userId): Order
+    public function execute(CartItemCollection $cartItems, PayBuddy $paymentProvider, string $paymentToken, int $userId, string $userEmail): Order
     {
-        return $this->databaseManager->transaction(function () use ($cartItems, $paymentProvider, $paymentToken, $userId) {
+        $order = $this->databaseManager->transaction(function () use ($cartItems, $paymentProvider, $paymentToken, $userId) {
             // Order
             $order = Order::startOrderCreation($userId)
                 ->addLinesFromCollection($cartItems)
                 ->fullfillOrder();
-
-            // Stock Reservation
-            $cartItems->items()->each(function ($cartItem) use ($order) {
-                $this->productStockManager->reserveStock($cartItem->product->id, $cartItem->quantity);
-            });
 
             // Payment
             $this->createPaymentForOrder->handle(
@@ -41,5 +39,15 @@ final class PurchaseItems
 
             return $order;
         });
+
+        $this->eventDispatcher->dispatch(new OrderFullfilled(
+            $order->id,
+            $order->localizedTotal(),
+            $userId,
+            $userEmail,
+            $cartItems
+        ));
+
+        return $order;
     }
 }

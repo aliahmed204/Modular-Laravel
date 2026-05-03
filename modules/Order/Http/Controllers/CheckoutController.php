@@ -24,7 +24,8 @@ class CheckoutController
                 $cartItems,
                 PayBuddy::make(),
                 $request->input('payment_token'),
-                $request->user()->id
+                $request->user()->id,
+                userEmail: $request->user()->email
             );
 
             return response()->json([
@@ -38,6 +39,7 @@ class CheckoutController
             ]);
         } catch (\Exception $e) {
             dd($e->getMessage());
+
             return response()->json([
                 'message' => 'An unexpected error occurred while processing your order.',
             ], 302);

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Modules\Order\Exceptions\OrderMissingOrderLinesException;
 use Modules\Payment\Payment;
 use Modules\Product\CartItemCollection;
+use NumberFormatter;
 
 class Order extends Model
 {
@@ -45,6 +46,11 @@ class Order extends Model
         return route('order::orders.show', $this);
     }
 
+    public function localizedTotal(): string
+    {
+        return (new NumberFormatter('en-US', NumberFormatter::CURRENCY))->formatCurrency($this->total_in_cents / 100, 'USD');
+    }
+
     public static function startOrderCreation(int $userId): self
     {
         return self::make([
@@ -70,8 +76,8 @@ class Order extends Model
 
     public function fullfillOrder(): self
     {
-        if ( $this->lines->isEmpty() ) {
-            throw new OrderMissingOrderLinesException();
+        if ($this->lines->isEmpty()) {
+            throw new OrderMissingOrderLinesException;
         }
 
         $this->status = self::COMPLETED;
